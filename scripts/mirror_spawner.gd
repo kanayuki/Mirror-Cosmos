@@ -22,7 +22,9 @@ func _on_mirror_placed(data: MirrorData) -> void:
 func _on_mirror_removed(position: Vector3) -> void:
 	var node := find_child(_node_name(position), false, false) as Node
 	if node:
-		node.queue_free()
+		# free() immediately — beam_updated fires next in the same call stack,
+		# so the physics world must reflect the removal before raycast runs.
+		node.free()
 
 func _on_mirror_rotated(data: MirrorData) -> void:
 	var node := find_child(_node_name(data.world_position), false, false) as Node3D
@@ -30,9 +32,11 @@ func _on_mirror_rotated(data: MirrorData) -> void:
 		node._apply_data()
 
 func _on_level_loaded(_data: LevelData) -> void:
-	# Clear all mirror nodes when a new level starts
+	# Use free() not queue_free(): beam_updated fires in the same frame,
+	# so old mirror nodes must be removed from the physics world immediately
+	# or the raycast will bounce off stale geometry.
 	for child in get_children():
-		child.queue_free()
+		child.free()
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 func _node_name(pos: Vector3) -> String:

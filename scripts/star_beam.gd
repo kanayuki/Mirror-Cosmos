@@ -22,8 +22,9 @@ func _ready() -> void:
 	_mat.emission = COLOR_BEAM
 	_mat.emission_energy_multiplier = 2.5
 
+	# beam_updated is always emitted after level_loaded in load_level(),
+	# so one connection is sufficient — no double recalculate on level load.
 	GameManager.beam_updated.connect(_recalculate)
-	GameManager.level_loaded.connect(func(_d): _recalculate())
 
 # ── Core ───────────────────────────────────────────────────────────────────
 func _recalculate() -> void:
@@ -78,9 +79,11 @@ func _draw(points: Array[Vector3]) -> void:
 	_beam_mesh.mesh = mesh
 
 func _on_target_hit() -> void:
-	if _solved:
+	# GameManager.is_solved guards against re-emission; set it before emit
+	# so any beam_updated triggered inside puzzle_solved handlers is a no-op.
+	if GameManager.is_solved:
 		return
-	_solved = true
+	GameManager.is_solved = true
 	_mat.albedo_color = COLOR_SOLVED
 	_mat.emission     = COLOR_SOLVED
 	GameManager.puzzle_solved.emit()

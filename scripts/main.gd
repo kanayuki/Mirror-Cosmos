@@ -2,11 +2,6 @@
 ## Wires GameManager node references, builds level geometry, handles progression.
 extends Node
 
-# ── Per-level geometry builders ────────────────────────────────────────────
-# Each entry maps level_index → Callable that receives the GameWorld Node3D.
-# Add a new entry here when adding a new level.
-const LEVEL_BUILDERS: Array[Callable] = []  # populated in _ready
-
 func _ready() -> void:
 	# Wire GameManager scene references
 	GameManager.design_camera    = $DesignCamera as Camera3D
@@ -30,8 +25,11 @@ func _on_level_loaded(data: LevelData) -> void:
 
 func _clear_geometry() -> void:
 	var geo: Node3D = $GameWorld/LevelGeometry
+	# Use free() not queue_free(): beam_updated fires in the same frame as
+	# level_loaded, so old nodes (including "target" group members) must be
+	# gone before the raycast runs or it will hit stale geometry.
 	for child in geo.get_children():
-		child.queue_free()
+		child.free()
 
 # Level 1: open room, straight-line challenge with one corner
 func _build_level_01(ld: LevelData) -> void:

@@ -26,6 +26,7 @@ var placed_mirrors: Array[MirrorData] = []
 var current_level_data: LevelData = null
 var current_level_index: int = 0
 var is_transitioning: bool = false
+var is_solved: bool = false  # True from puzzle_solved until next level loads
 
 # ── Scene node references (assigned by main.gd on _ready) ─────────────────
 var design_camera: Camera3D = null
@@ -49,6 +50,7 @@ func load_level_by_index(index: int) -> void:
 func load_level(data: LevelData) -> void:
 	current_level_data = data
 	placed_mirrors.clear()
+	is_solved = false
 	current_mode = Mode.DESIGN
 	level_loaded.emit(data)
 	beam_updated.emit()
@@ -67,7 +69,7 @@ func get_mirror_at(pos: Vector3) -> MirrorData:
 
 # ── Mirror placement ───────────────────────────────────────────────────────
 func try_place_mirror(world_pos: Vector3) -> bool:
-	if current_level_data == null:
+	if is_solved or current_level_data == null:
 		return false
 	if placed_mirrors.size() >= current_level_data.max_mirrors:
 		return false
@@ -86,6 +88,8 @@ func try_place_mirror(world_pos: Vector3) -> bool:
 	return true
 
 func try_remove_mirror(world_pos: Vector3) -> bool:
+	if is_solved:
+		return false
 	var m := get_mirror_at(world_pos)
 	if m == null:
 		return false
@@ -95,6 +99,8 @@ func try_remove_mirror(world_pos: Vector3) -> bool:
 	return true
 
 func try_rotate_mirror(world_pos: Vector3) -> bool:
+	if is_solved:
+		return false
 	var m := get_mirror_at(world_pos)
 	if m == null:
 		return false

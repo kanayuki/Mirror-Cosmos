@@ -15,16 +15,12 @@ func _ready() -> void:
 	add_to_group("mirror")
 	if mirror_data:
 		_apply_data()
-	GameManager.beam_updated.connect(_on_beam_updated)
+	# Do NOT connect beam_updated here — MirrorSpawner handles rotation sync
+	# via mirror_rotated signal, avoiding per-frame callbacks on every beam cast.
 
 func _apply_data() -> void:
 	global_position = mirror_data.world_position
 	rotation_degrees.y = mirror_data.rotation_y
-
-func _on_beam_updated() -> void:
-	# Re-sync position/rotation if data changed (e.g. after rotate)
-	if mirror_data:
-		_apply_data()
 
 ## Returns the surface normal used for beam reflection.
 func get_normal() -> Vector3:

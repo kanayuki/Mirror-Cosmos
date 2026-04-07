@@ -68,8 +68,9 @@ func _update_hover(screen_pos: Vector2) -> void:
 	var result := space.intersect_ray(params)
 
 	var new_hover: Node3D = null
-	if result and (result.collider as Node).is_in_group("mirror"):
-		new_hover = result.collider as Node3D
+	var collider := result.get("collider") as Node3D
+	if collider and collider.is_in_group("mirror"):
+		new_hover = collider
 
 	if new_hover == _hovered_mirror:
 		return

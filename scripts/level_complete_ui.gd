@@ -22,7 +22,7 @@ func _on_puzzle_solved() -> void:
 	var par    := ld.par_mirrors if ld else placed
 	var stars  := _calc_stars(placed, par)
 
-	_title.text = "★ " + "★".repeat(stars) + "  Solved!"
+	_title.text = "★".repeat(stars) + "☆".repeat(3 - stars) + "  Solved!"
 	_stats.text = "Mirrors used: %d  /  Par: %d" % [placed, par]
 	_btn_next.visible = GameManager.has_next_level()
 
