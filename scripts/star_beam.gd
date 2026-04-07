@@ -1,54 +1,59 @@
-## Star beam system — casts an iterative chain of raycasts,
-## draws the path with ImmediateMesh, and detects puzzle completion.
+## Star beam — iterative RayCast3D chain, ImmediateMesh visualisation.
+## Recalculates only when beam_updated signal fires (event-driven, not per-frame).
 extends Node3D
 
-const MAX_BOUNCES   := 10
-const RAY_LENGTH    := 60.0
-const BEAM_COLOR    := Color(0.3, 0.9, 1.0)
-const BEAM_SOLVED_COLOR := Color(1.0, 0.9, 0.2)
-const EPSILON       := 0.015   # Offset from surface to avoid self-hit
+const MAX_BOUNCES      := 10
+const RAY_LENGTH       := 60.0
+const EPSILON          := 0.015   # Offset to avoid self-intersection after bounce
+const COLOR_BEAM       := Color(0.3, 0.9, 1.0)
+const COLOR_SOLVED     := Color(1.0, 0.9, 0.2)
 
-@onready var beam_mesh_instance: MeshInstance3D = $BeamMesh
-@onready var ray: RayCast3D = $RayCast3D
+@onready var _beam_mesh: MeshInstance3D = $BeamMesh
+@onready var _ray: RayCast3D           = $RayCast3D
 
-var _beam_material: StandardMaterial3D
+var _mat: StandardMaterial3D
 var _solved: bool = false
 
 func _ready() -> void:
-	_beam_material = StandardMaterial3D.new()
-	_beam_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_beam_material.albedo_color = BEAM_COLOR
-	_beam_material.emission_enabled = true
-	_beam_material.emission = BEAM_COLOR
-	_beam_material.emission_energy_multiplier = 2.5
+	_mat = StandardMaterial3D.new()
+	_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_mat.albedo_color = COLOR_BEAM
+	_mat.emission_enabled = true
+	_mat.emission = COLOR_BEAM
+	_mat.emission_energy_multiplier = 2.5
 
 	GameManager.beam_updated.connect(_recalculate)
+	GameManager.level_loaded.connect(func(_d): _recalculate())
 
+# ── Core ───────────────────────────────────────────────────────────────────
 func _recalculate() -> void:
-	if GameManager.current_level_data == null:
+	var ld := GameManager.current_level_data
+	if ld == null:
 		return
-	var origin    := GameManager.current_level_data.beam_origin
-	var direction := GameManager.current_level_data.beam_direction.normalized()
-	var points    := _cast_chain(origin, direction)
-	_draw_beam(points)
+	_solved = false
+	_mat.albedo_color = COLOR_BEAM
+	_mat.emission     = COLOR_BEAM
+
+	var points := _cast_chain(ld.beam_origin, ld.beam_direction.normalized())
+	_draw(points)
 
 func _cast_chain(origin: Vector3, direction: Vector3) -> Array[Vector3]:
 	var points: Array[Vector3] = [origin]
 	var pos := origin
 	var dir := direction
 
-	for _i in range(MAX_BOUNCES):
-		ray.global_position = pos
-		ray.target_position = dir * RAY_LENGTH
-		ray.force_raycast_update()
+	for _i: int in range(MAX_BOUNCES):
+		_ray.global_position = pos
+		_ray.target_position = dir * RAY_LENGTH
+		_ray.force_raycast_update()
 
-		if not ray.is_colliding():
+		if not _ray.is_colliding():
 			points.append(pos + dir * RAY_LENGTH)
 			break
 
-		var hit_pos    := ray.get_collision_point()
-		var hit_normal := ray.get_collision_normal()
-		var hit_obj    := ray.get_collider()
+		var hit_pos    := _ray.get_collision_point()
+		var hit_normal := _ray.get_collision_normal()
+		var hit_obj    := _ray.get_collider() as Node
 		points.append(hit_pos)
 
 		if hit_obj.is_in_group("target"):
@@ -56,30 +61,26 @@ func _cast_chain(origin: Vector3, direction: Vector3) -> Array[Vector3]:
 			break
 
 		if not hit_obj.is_in_group("mirror"):
-			break  # Hit a wall — beam stops
+			break
 
-		# Reflect direction around surface normal
 		dir = (dir - 2.0 * dir.dot(hit_normal) * hit_normal).normalized()
 		pos = hit_pos + dir * EPSILON
 
 	return points
 
-func _draw_beam(points: Array[Vector3]) -> void:
+func _draw(points: Array[Vector3]) -> void:
 	var mesh := ImmediateMesh.new()
-	mesh.surface_begin(Mesh.PRIMITIVE_LINES, _beam_material)
-	for i in range(points.size() - 1):
-		# Convert from global to local (beam mesh is at origin)
-		mesh.surface_add_vertex(points[i])
-		mesh.surface_add_vertex(points[i + 1])
+	mesh.surface_begin(Mesh.PRIMITIVE_LINES, _mat)
+	for i: int in range(points.size() - 1):
+		mesh.surface_add_vertex(to_local(points[i]))
+		mesh.surface_add_vertex(to_local(points[i + 1]))
 	mesh.surface_end()
-	beam_mesh_instance.mesh = mesh
+	_beam_mesh.mesh = mesh
 
 func _on_target_hit() -> void:
 	if _solved:
 		return
 	_solved = true
-	_beam_material.albedo_color = BEAM_SOLVED_COLOR
-	_beam_material.emission = BEAM_SOLVED_COLOR
-	GameManager.emit_signal("puzzle_solved")
-	await get_tree().create_timer(0.5).timeout
-	_solved = false  # Reset for re-entry / retry
+	_mat.albedo_color = COLOR_SOLVED
+	_mat.emission     = COLOR_SOLVED
+	GameManager.puzzle_solved.emit()
