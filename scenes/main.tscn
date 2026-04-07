@@ -1,0 +1,75 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/player.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/placement_system.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/star_beam.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="5"]
+
+[node name="Main" type="Node"]
+script = ExtResource("5")
+
+[node name="GameWorld" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="GameWorld"]
+transform = Transform3D(0.707107, -0.408248, 0.57735, 0, 0.816497, 0.57735, -0.707107, -0.408248, 0.57735, 0, 12, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="MirrorContainer" type="Node3D" parent="GameWorld"]
+
+[node name="StarBeam" type="Node3D" parent="GameWorld"]
+script = ExtResource("3")
+
+[node name="BeamMesh" type="MeshInstance3D" parent="GameWorld/StarBeam"]
+
+[node name="RayCast3D" type="RayCast3D" parent="GameWorld/StarBeam"]
+enabled = false
+
+[node name="Player" parent="." instance=ExtResource("1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="DesignCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 22, 0)
+projection = 1
+size = 24.0
+current = true
+
+[node name="PlacementSystem" type="Node" parent="."]
+script = ExtResource("2")
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="FadeOverlay" type="ColorRect" parent="UILayer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+mouse_filter = 2
+
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 2
+script = ExtResource("4")
+
+[node name="VBox" type="VBoxContainer" parent="HUD"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ModeLabel" type="Label" parent="HUD/VBox"]
+theme_override_font_sizes/font_size = 18
+text = "[ DESIGN MODE ]"
+modulate = Color(0.4, 0.9, 1.0, 1)
+
+[node name="MirrorLabel" type="Label" parent="HUD/VBox"]
+theme_override_font_sizes/font_size = 16
+text = "Mirrors: 0 / 0"
+
+[node name="HintLabel" type="Label" parent="HUD/VBox"]
+theme_override_font_sizes/font_size = 14
+modulate = Color(0.8, 0.8, 0.8, 1)
+text = "Left-click: place  •  Right-click: remove  •  R: rotate  •  Tab: explore"
