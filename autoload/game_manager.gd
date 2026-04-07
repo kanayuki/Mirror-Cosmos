@@ -18,6 +18,8 @@ signal level_loaded(data: LevelData)
 const LEVEL_PATHS: Array[String] = [
 	"res://resources/levels/level_01.tres",
 	"res://resources/levels/level_02.tres",
+	"res://resources/levels/level_03.tres",
+	"res://resources/levels/level_04.tres",
 ]
 
 # ── State ──────────────────────────────────────────────────────────────────

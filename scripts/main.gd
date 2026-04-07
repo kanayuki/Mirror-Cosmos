@@ -1,9 +1,10 @@
 ## Main scene bootstrap.
-## Wires GameManager node references, builds level geometry, handles progression.
+## Wires GameManager node references, builds level geometry, spawns fragments.
 extends Node
 
+const MEMORY_FRAGMENT_SCENE := preload("res://scenes/world/memory_fragment.tscn")
+
 func _ready() -> void:
-	# Wire GameManager scene references
 	GameManager.design_camera    = $DesignCamera as Camera3D
 	GameManager.player_node      = $Player as CharacterBody3D
 	GameManager.mirror_container = $GameWorld/MirrorContainer as Node3D
@@ -11,54 +12,88 @@ func _ready() -> void:
 	GameManager.fade_overlay     = $UILayer/FadeOverlay as ColorRect
 
 	GameManager.level_loaded.connect(_on_level_loaded)
-
-	# Start at level 0
 	GameManager.load_level_by_index(0)
 
-# ── Level geometry ─────────────────────────────────────────────────────────
+# ── Level loading ──────────────────────────────────────────────────────────
 func _on_level_loaded(data: LevelData) -> void:
 	_clear_geometry()
 	match data.level_index:
 		0: _build_level_01(data)
 		1: _build_level_02(data)
-	$Player.global_position = Vector3(0.0, 1.0, 0.0)
+		2: _build_level_03(data)
+		3: _build_level_04(data)
+	_spawn_memory_fragments(data)
+	($Player as CharacterBody3D).global_position = Vector3(0.0, 1.0, 0.0)
 
 func _clear_geometry() -> void:
-	var geo: Node3D = $GameWorld/LevelGeometry
-	# Use free() not queue_free(): beam_updated fires in the same frame as
-	# level_loaded, so old nodes (including "target" group members) must be
-	# gone before the raycast runs or it will hit stale geometry.
+	var geo := $GameWorld/LevelGeometry as Node3D
+	# free() not queue_free(): beam_updated fires in the same frame,
+	# old nodes must be gone before raycast runs.
 	for child in geo.get_children():
 		child.free()
+	# Also clear memory fragments from previous level
+	for child in ($GameWorld/FragmentContainer as Node3D).get_children():
+		child.free()
 
-# Level 1: open room, straight-line challenge with one corner
+func _spawn_memory_fragments(data: LevelData) -> void:
+	var container := $GameWorld/FragmentContainer as Node3D
+	var pos_count  := data.memory_fragment_positions.size()
+	var path_count := data.memory_fragment_log_paths.size()
+	for i: int in mini(pos_count, path_count):
+		var frag := MEMORY_FRAGMENT_SCENE.instantiate() as MemoryFragment
+		frag.global_position = data.memory_fragment_positions[i]
+		var entry := ResourceLoader.load(data.memory_fragment_log_paths[i]) as LogEntry
+		frag.log_entry = entry
+		container.add_child(frag)
+
+# ── Level geometry ─────────────────────────────────────────────────────────
+# Level 1: open room, beam crosses corner
 func _build_level_01(ld: LevelData) -> void:
-	var geo: Node3D = $GameWorld/LevelGeometry
-	_room(geo, Vector3(0, -0.5, 0), Vector3(22, 1, 14), Color(0.08, 0.10, 0.18))
-	_walls(geo, 11.0, 7.0)
+	var geo := $GameWorld/LevelGeometry as Node3D
+	_room(geo, Color(0.08, 0.10, 0.18))
+	_walls(geo, 11.0, 7.0, Color(0.10, 0.12, 0.22))
 	_emitter(geo, ld.beam_origin)
 	_target(geo, ld.target_position)
 
-# Level 2: central pillar forces a two-bounce solution
+# Level 2: central pillar forces two-bounce solution
 func _build_level_02(ld: LevelData) -> void:
-	var geo: Node3D = $GameWorld/LevelGeometry
-	_room(geo, Vector3(0, -0.5, 0), Vector3(22, 1, 14), Color(0.10, 0.08, 0.12))
-	_walls(geo, 11.0, 7.0)
-	# Central pillar — forces beam to go around
-	_box(geo, Vector3(0, 2, 0), Vector3(2.5, 6, 2.5), Color(0.15, 0.12, 0.22))
+	var geo := $GameWorld/LevelGeometry as Node3D
+	_room(geo, Color(0.10, 0.08, 0.14))
+	_walls(geo, 11.0, 7.0, Color(0.12, 0.10, 0.24))
+	_box(geo, Vector3(0.0, 2.0,  0.0), Vector3(2.5, 6.0, 2.5), Color(0.15, 0.12, 0.22))
+	_emitter(geo, ld.beam_origin)
+	_target(geo, ld.target_position)
+
+# Level 3: two parallel pillars — beam must snake between them
+func _build_level_03(ld: LevelData) -> void:
+	var geo := $GameWorld/LevelGeometry as Node3D
+	_room(geo, Color(0.08, 0.09, 0.16))
+	_walls(geo, 11.0, 7.0, Color(0.10, 0.11, 0.22))
+	_box(geo, Vector3(-3.0, 2.0,  1.5), Vector3(1.8, 6.0, 1.8), Color(0.14, 0.11, 0.20))
+	_box(geo, Vector3( 3.0, 2.0, -1.5), Vector3(1.8, 6.0, 1.8), Color(0.14, 0.11, 0.20))
+	_emitter(geo, ld.beam_origin)
+	_target(geo, ld.target_position)
+
+# Level 4 (Chapter 1 boss): cross-shaped obstacle, beam starts and ends on same side
+func _build_level_04(ld: LevelData) -> void:
+	var geo := $GameWorld/LevelGeometry as Node3D
+	_room(geo, Color(0.07, 0.08, 0.15))
+	_walls(geo, 11.0, 7.0, Color(0.09, 0.11, 0.21))
+	# Cross arms
+	_box(geo, Vector3( 0.0, 2.0, 0.0), Vector3(6.0, 5.0, 1.5), Color(0.13, 0.11, 0.22))
+	_box(geo, Vector3( 0.0, 2.0, 0.0), Vector3(1.5, 5.0, 6.0), Color(0.13, 0.11, 0.22))
 	_emitter(geo, ld.beam_origin)
 	_target(geo, ld.target_position)
 
 # ── Geometry helpers ───────────────────────────────────────────────────────
-func _room(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> void:
-	_box(parent, pos, size, color)
+func _room(parent: Node3D, floor_color: Color) -> void:
+	_box(parent, Vector3(0.0, -0.5, 0.0), Vector3(22.0, 1.0, 14.0), floor_color)
 
-func _walls(parent: Node3D, hx: float, hz: float) -> void:
-	var c := Color(0.10, 0.12, 0.22)
-	_box(parent, Vector3( 0,  2, -hz), Vector3(hx * 2, 6, 0.4), c)
-	_box(parent, Vector3( 0,  2,  hz), Vector3(hx * 2, 6, 0.4), c)
-	_box(parent, Vector3(-hx, 2,   0), Vector3(0.4, 6, hz * 2), c)
-	_box(parent, Vector3( hx, 2,   0), Vector3(0.4, 6, hz * 2), c)
+func _walls(parent: Node3D, hx: float, hz: float, color: Color) -> void:
+	_box(parent, Vector3( 0.0,  2.0, -hz), Vector3(hx * 2.0, 6.0,  0.4),    color)
+	_box(parent, Vector3( 0.0,  2.0,  hz), Vector3(hx * 2.0, 6.0,  0.4),    color)
+	_box(parent, Vector3(-hx,   2.0,  0.0), Vector3(0.4,     6.0, hz * 2.0), color)
+	_box(parent, Vector3( hx,   2.0,  0.0), Vector3(0.4,     6.0, hz * 2.0), color)
 
 func _emitter(parent: Node3D, pos: Vector3) -> void:
 	_box(parent, pos, Vector3(0.3, 0.3, 0.3), Color(0.3, 0.8, 1.0), true)
@@ -73,12 +108,12 @@ func _box(parent: Node3D, pos: Vector3, size: Vector3,
 	var body   := StaticBody3D.new()
 	var mesh_i := MeshInstance3D.new()
 	var col    := CollisionShape3D.new()
+	var mat    := StandardMaterial3D.new()
 	var bm     := BoxMesh.new()
 	var bs     := BoxShape3D.new()
-	var mat    := StandardMaterial3D.new()
 
-	bm.size = size
-	bs.size = size
+	bm.size  = size
+	bs.size  = size
 	mat.albedo_color = color
 	if emissive:
 		mat.emission_enabled = true

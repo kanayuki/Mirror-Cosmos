@@ -1,13 +1,14 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/world/player.tscn"        id="1"]
-[ext_resource type="Script"      path="res://scripts/main.gd"                  id="2"]
-[ext_resource type="Script"      path="res://scripts/placement_system.gd"      id="3"]
-[ext_resource type="Script"      path="res://scripts/star_beam.gd"             id="4"]
-[ext_resource type="Script"      path="res://scripts/hud.gd"                   id="5"]
-[ext_resource type="Script"      path="res://scripts/mirror_spawner.gd"        id="6"]
-[ext_resource type="Script"      path="res://scripts/grid_overlay.gd"          id="7"]
-[ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn"    id="8"]
+[ext_resource type="PackedScene" path="res://scenes/world/player.tscn"       id="1"]
+[ext_resource type="Script"      path="res://scripts/main.gd"                 id="2"]
+[ext_resource type="Script"      path="res://scripts/placement_system.gd"     id="3"]
+[ext_resource type="Script"      path="res://scripts/star_beam.gd"            id="4"]
+[ext_resource type="Script"      path="res://scripts/hud.gd"                  id="5"]
+[ext_resource type="Script"      path="res://scripts/mirror_spawner.gd"       id="6"]
+[ext_resource type="Script"      path="res://scripts/grid_overlay.gd"         id="7"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn"   id="8"]
+[ext_resource type="PackedScene" path="res://scenes/ui/log_viewer.tscn"       id="9"]
 
 [node name="Main" type="Node"]
 script = ExtResource("2")
@@ -20,6 +21,8 @@ light_energy = 1.2
 shadow_enabled = true
 
 [node name="LevelGeometry" type="Node3D" parent="GameWorld"]
+
+[node name="FragmentContainer" type="Node3D" parent="GameWorld"]
 
 [node name="MirrorContainer" type="Node3D" parent="GameWorld"]
 script = ExtResource("6")
@@ -62,20 +65,33 @@ script = ExtResource("5")
 
 [node name="VBox" type="VBoxContainer" parent="HUD"]
 offset_left = 20.0
-offset_top = 20.0
+offset_top = 16.0
+theme_override_constants/separation = 4
+
+[node name="LevelLabel" type="Label" parent="HUD/VBox"]
+theme_override_font_sizes/font_size = 14
+modulate = Color(0.6, 0.7, 0.9, 1)
+text = ""
 
 [node name="ModeLabel" type="Label" parent="HUD/VBox"]
 theme_override_font_sizes/font_size = 18
 modulate = Color(0.4, 0.9, 1.0, 1)
-text = "[ DESIGN MODE ]"
+text = "[ 设计模式 ]"
 
 [node name="MirrorLabel" type="Label" parent="HUD/VBox"]
 theme_override_font_sizes/font_size = 16
-text = "Mirrors: 0 / 0"
+text = ""
 
 [node name="HintLabel" type="Label" parent="HUD/VBox"]
+theme_override_font_sizes/font_size = 13
+modulate = Color(0.7, 0.7, 0.7, 1)
+text = ""
+
+[node name="LogLabel" type="Label" parent="HUD/VBox"]
 theme_override_font_sizes/font_size = 14
-modulate = Color(0.8, 0.8, 0.8, 1)
-text = "Click: place  •  Right-click: remove  •  Tab: explore"
+modulate = Color(1.0, 0.85, 0.3, 1)
+text = ""
 
 [node name="LevelComplete" parent="." instance=ExtResource("8")]
+
+[node name="LogViewer" parent="." instance=ExtResource("9")]
