@@ -12,7 +12,33 @@ func _ready() -> void:
 	GameManager.fade_overlay     = $UILayer/FadeOverlay as ColorRect
 
 	GameManager.level_loaded.connect(_on_level_loaded)
-	GameManager.load_level_by_index(0)
+	GameManager.puzzle_solved.connect(_on_puzzle_solved)
+
+	# Restore collected logs from save before loading the level
+	_restore_logs_from_save()
+	GameManager.load_level_by_index(SaveSystem.pending_level_index)
+
+func _restore_logs_from_save() -> void:
+	var ids := SaveSystem.load_log_ids()
+	if ids.is_empty():
+		return
+	# Find all log resources and re-collect any whose IDs are in the save
+	var log_dir := "res://resources/logs/"
+	var dir := DirAccess.open(log_dir)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var fname := dir.get_next()
+	while fname != "":
+		if fname.ends_with(".tres"):
+			var entry := ResourceLoader.load(log_dir + fname) as LogEntry
+			if entry != null and entry.log_id in ids:
+				LogManager.collect(entry)
+		fname = dir.get_next()
+
+func _on_puzzle_solved() -> void:
+	# Auto-save when a puzzle is completed
+	SaveSystem.save(GameManager.current_level_index)
 
 # ── Level loading ──────────────────────────────────────────────────────────
 func _on_level_loaded(data: LevelData) -> void:
@@ -52,7 +78,7 @@ func _spawn_memory_fragments(data: LevelData) -> void:
 # Level 1: open room, beam crosses corner
 func _build_level_01(ld: LevelData) -> void:
 	var geo := $GameWorld/LevelGeometry as Node3D
-	_room(geo, Color(0.08, 0.10, 0.18))
+	_room(geo, Color(0.08, 0.10, 0.18), Color(0.06, 0.08, 0.15))
 	_walls(geo, 11.0, 7.0, Color(0.10, 0.12, 0.22))
 	_emitter(geo, ld.beam_origin)
 	_target(geo, ld.target_position)
@@ -60,7 +86,7 @@ func _build_level_01(ld: LevelData) -> void:
 # Level 2: central pillar forces two-bounce solution
 func _build_level_02(ld: LevelData) -> void:
 	var geo := $GameWorld/LevelGeometry as Node3D
-	_room(geo, Color(0.10, 0.08, 0.14))
+	_room(geo, Color(0.10, 0.08, 0.14), Color(0.08, 0.06, 0.12))
 	_walls(geo, 11.0, 7.0, Color(0.12, 0.10, 0.24))
 	_box(geo, Vector3(0.0, 2.0,  0.0), Vector3(2.5, 6.0, 2.5), Color(0.15, 0.12, 0.22))
 	_emitter(geo, ld.beam_origin)
@@ -69,7 +95,7 @@ func _build_level_02(ld: LevelData) -> void:
 # Level 3: two parallel pillars — beam must snake between them
 func _build_level_03(ld: LevelData) -> void:
 	var geo := $GameWorld/LevelGeometry as Node3D
-	_room(geo, Color(0.08, 0.09, 0.16))
+	_room(geo, Color(0.08, 0.09, 0.16), Color(0.06, 0.07, 0.14))
 	_walls(geo, 11.0, 7.0, Color(0.10, 0.11, 0.22))
 	_box(geo, Vector3(-3.0, 2.0,  1.5), Vector3(1.8, 6.0, 1.8), Color(0.14, 0.11, 0.20))
 	_box(geo, Vector3( 3.0, 2.0, -1.5), Vector3(1.8, 6.0, 1.8), Color(0.14, 0.11, 0.20))
@@ -79,17 +105,26 @@ func _build_level_03(ld: LevelData) -> void:
 # Level 4 (Chapter 1 boss): cross-shaped obstacle, beam starts and ends on same side
 func _build_level_04(ld: LevelData) -> void:
 	var geo := $GameWorld/LevelGeometry as Node3D
-	_room(geo, Color(0.07, 0.08, 0.15))
+	_room(geo, Color(0.07, 0.08, 0.15), Color(0.05, 0.06, 0.12))
 	_walls(geo, 11.0, 7.0, Color(0.09, 0.11, 0.21))
-	# Cross arms
 	_box(geo, Vector3( 0.0, 2.0, 0.0), Vector3(6.0, 5.0, 1.5), Color(0.13, 0.11, 0.22))
 	_box(geo, Vector3( 0.0, 2.0, 0.0), Vector3(1.5, 5.0, 6.0), Color(0.13, 0.11, 0.22))
 	_emitter(geo, ld.beam_origin)
 	_target(geo, ld.target_position)
 
 # ── Geometry helpers ───────────────────────────────────────────────────────
-func _room(parent: Node3D, floor_color: Color) -> void:
+## Builds floor + ceiling for a level room.
+func _room(parent: Node3D, floor_color: Color, ceiling_color: Color) -> void:
+	# Floor
 	_box(parent, Vector3(0.0, -0.5, 0.0), Vector3(22.0, 1.0, 14.0), floor_color)
+	# Ceiling — slightly emissive to serve as ambient fill light
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = ceiling_color
+	mat.emission_enabled = true
+	mat.emission = ceiling_color
+	mat.emission_energy_multiplier = 0.35
+	var ceiling := _box(parent, Vector3(0.0, 5.5, 0.0), Vector3(22.0, 0.5, 14.0), ceiling_color)
+	(ceiling.get_child(0) as MeshInstance3D).set_surface_override_material(0, mat)
 
 func _walls(parent: Node3D, hx: float, hz: float, color: Color) -> void:
 	_box(parent, Vector3( 0.0,  2.0, -hz), Vector3(hx * 2.0, 6.0,  0.4),    color)

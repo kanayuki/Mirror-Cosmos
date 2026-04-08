@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/world/player.tscn"       id="1"]
 [ext_resource type="Script"      path="res://scripts/main.gd"                 id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script"      path="res://scripts/grid_overlay.gd"         id="7"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn"   id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/log_viewer.tscn"       id="9"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn"       id="10"]
 
 [node name="Main" type="Node"]
 script = ExtResource("2")
@@ -95,3 +96,5 @@ text = ""
 [node name="LevelComplete" parent="." instance=ExtResource("8")]
 
 [node name="LogViewer" parent="." instance=ExtResource("9")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("10")]
