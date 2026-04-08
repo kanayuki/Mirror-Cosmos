@@ -4,6 +4,12 @@ extends Node
 
 const MEMORY_FRAGMENT_SCENE := preload("res://scenes/world/memory_fragment.tscn")
 
+# Hard-coded log paths — DirAccess.open("res://...") fails in exported builds.
+const LOG_PATHS: Array[String] = [
+	"res://resources/logs/log_01.tres",
+	"res://resources/logs/log_02.tres",
+]
+
 func _ready() -> void:
 	GameManager.design_camera    = $DesignCamera as Camera3D
 	GameManager.player_node      = $Player as CharacterBody3D
@@ -22,19 +28,10 @@ func _restore_logs_from_save() -> void:
 	var ids := SaveSystem.load_log_ids()
 	if ids.is_empty():
 		return
-	# Find all log resources and re-collect any whose IDs are in the save
-	var log_dir := "res://resources/logs/"
-	var dir := DirAccess.open(log_dir)
-	if dir == null:
-		return
-	dir.list_dir_begin()
-	var fname := dir.get_next()
-	while fname != "":
-		if fname.ends_with(".tres"):
-			var entry := ResourceLoader.load(log_dir + fname) as LogEntry
-			if entry != null and entry.log_id in ids:
-				LogManager.collect(entry)
-		fname = dir.get_next()
+	for path: String in LOG_PATHS:
+		var entry := ResourceLoader.load(path) as LogEntry
+		if entry != null and entry.log_id in ids:
+			LogManager.collect(entry)
 
 func _on_puzzle_solved() -> void:
 	# Auto-save when a puzzle is completed

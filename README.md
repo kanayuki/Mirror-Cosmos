@@ -1,212 +1,135 @@
-# 《镜像星域》Mirror Cosmos — 项目策划书 v2.0
+# 镜像星域 · Mirror Cosmos
 
-> 2D 建造 × 3D 镜像太空解谜游戏 | Godot 4 | 预计 2026 年 Q2 发布
+> 3D mirror-reflection puzzle game — Godot 4.3 — GDScript
+
+A first-person / overhead hybrid puzzle game set in deep space. Place mirrors in overhead design mode, then drop into first-person explore mode to watch the star-beam trace its path through your solution.
 
 ---
 
-## 一、核心玩法闭环
+## Quick Start (Players)
+
+1. Open `project.godot` in **Godot 4.3+** and press **F5** to run, or launch the exported binary.
+2. From the main menu, choose **新游戏** (New Game) or **继续** (Continue) if a save exists.
+3. Solve each puzzle by directing the star-beam from its emitter (blue cube) to the target (gold cube).
+4. Progress saves automatically when each puzzle is solved.
+
+### Controls
+
+| Key | Action |
+|-----|--------|
+| Tab / F2 | Toggle Design ↔ Explore mode |
+| W A S D | Walk (Explore mode) |
+| Space | Jump (Explore mode) |
+| E | Interact / collect memory fragment |
+| Left-click | Place mirror (Design) / Rotate mirror (Design, on existing) |
+| Right-click | Remove mirror (Design mode) |
+| R | Rotate placement preview (Design mode) |
+| L | Open / close log viewer |
+| Esc | Pause menu |
+
+---
+
+## Quick Start (Developers)
 
 ```
-[2D 蓝图建造] → [一键切换 3D 探索] → [镜面反射解谜] → [解锁下一关]
+git clone <repo>
+# Open in Godot 4.3+ — no extra plugins required
 ```
 
-**差异化卖点**：目前市面上没有「玩家自建关卡 + 3D 镜像太空」组合的同类游戏，是真实市场空白。
+All GDScript files pass the built-in static analyser with typed variables throughout. No third-party dependencies.
 
 ---
 
-## 二、实用优化建议
+## Project Structure
 
-### 2.1 可玩性核心问题
-
-**问题 1：2D→3D 切换的"认知断层"**
-- 风险：玩家在 2D 蓝图摆好镜子，进入 3D 后找不到对应位置，产生迷失感。
-- 建议：切换时加入 **0.5 秒"蓝图叠影"过渡**——3D 场景中短暂叠加半透明 2D 俯视图，帮助玩家建立空间对应关系。这是教学关卡最关键的一步。
-
-**问题 2：镜面解谜容错率低**
-- 风险：玩家反复进出 2D/3D 调整镜子，挫败感积累快，容易流失。
-- 建议：在 3D 中允许**微调镜面角度**（±15°），不必退回 2D 重建。保留"大幅改动回 2D，微调留 3D"的双层操作逻辑。
-
-**问题 3：星光路径不直观**
-- 建议：常态显示淡色光路预览线（类似《Portal》的弹道线），只有激活目标时才显示完整辉光。避免玩家完全靠猜。
-
----
-
-### 2.2 关卡设计具体建议
-
-**第 1 关必须做到的事**（生死线）：
-- 60 秒内让玩家完成第一次完整循环（放镜→切换→看到光反射→目标亮起）
-- 不要在第 1 关引入任何故事文本，先给"成功感"
-- 镜子数量：严格限制 2 面，禁止超过
-
-**难度曲线实际建议**：
-
-| 关卡 | 镜面数 | 新增机制 | 预计卡关时间 |
-|------|--------|----------|------------|
-| 1    | 2      | 仅基础反射 | < 2 分钟  |
-| 2    | 3      | 全息平台影子 | 3-5 分钟 |
-| 3    | 4      | 记忆碎片收集 | 5-8 分钟 |
-| 4    | 5      | Boss挑战关 | 8-12 分钟 |
-| 5-6  | 5-7    | 沙尘遮挡 | 10-15 分钟 |
-
-**火星章"沙尘暴"机制警告**：
-- 沙尘遮挡星光路径是好设计，但**不要同时加入时间压力**（120秒挑战）。两个压力叠加会让玩家崩溃。建议沙尘暴和计时挑战分开做成两个独立关卡。
-
----
-
-### 2.3 MVP 严格边界（防范围膨胀）
-
-**MVP 必须有**：
-- [ ] 2D 蓝图系统（拖拽放置）
-- [ ] 3D 探索系统（WASD + 镜面交互）
-- [ ] 2D↔3D 无缝切换（< 0.5 秒）
-- [ ] 基础镜面反射 + 星光 RayCast
-- [ ] 月球第 1-2 关完整可玩
-- [ ] 基础存档（JSON）
-
-**MVP 不要做**：
-- ✗ 虫洞镜、偏振镜（留给 v1.5）
-- ✗ 社区分享功能（留给发布版）
-- ✗ 成就系统（留给发布版）
-- ✗ 多结局（留给发布版）
-- ✗ 沙盒模式（留给 Demo 后）
-- ✗ Android/iOS 适配
-
----
-
-### 2.4 技术实现优先级
-
-**第一周必须跑通的原型**：
-
-```gdscript
-# 最小可验证原型只需要这三件事：
-# 1. 一个 2D 网格可以拖拽放置节点
-# 2. 按 Tab 键切换到 3D 场景
-# 3. 3D 场景中有一条 RayCast 遇到镜面节点会改变方向
-
-# MirrorObject3D.gd 核心逻辑
-func reflect_ray(incoming_dir: Vector3, normal: Vector3) -> Vector3:
-    return incoming_dir - 2 * incoming_dir.dot(normal) * normal
 ```
-
-**性能红线**：
-- SubViewport 数量 ≤ 4（超出会在低端机上掉帧）
-- 每关镜面上限建议设为 12 面（超过后反射链计算量指数增长）
-- Web 版本：SubViewport 降为 2，其余用 Shader 模拟
-
-**切换系统数据结构**（建议）：
-
-```gdscript
-# MirrorData.gd - Resource
-class_name MirrorData extends Resource
-
-@export var grid_position: Vector2i
-@export var mirror_type: int  # 0=基础 1=扭曲 2=延迟
-@export var rotation_degrees: float
-@export var is_active: bool = false
+Mirror-Cosmos/
+├── autoload/
+│   ├── game_manager.gd       # Central singleton — mode, signals, level loading
+│   ├── log_manager.gd        # Collected LogEntry deduplication
+│   └── save_system.gd        # user://save.json — level index + log IDs
+├── resources/
+│   ├── levels/               # LevelData .tres files (level_01 – level_04)
+│   └── logs/                 # LogEntry .tres files (narrative fragments)
+├── scenes/
+│   ├── main.tscn             # Game scene root
+│   ├── ui/                   # main_menu, pause_menu, level_complete, log_viewer
+│   └── world/                # player, memory_fragment
+├── scripts/
+│   ├── main.gd               # Level geometry builder + fragment spawner
+│   ├── star_beam.gd          # Iterative RayCast3D reflection chain
+│   ├── mirror_spawner.gd     # 3D mirror node lifecycle (single owner)
+│   ├── placement_system.gd   # Input → GameManager calls (Design mode only)
+│   ├── grid_overlay.gd       # ImmediateMesh grid drawn in Design mode
+│   └── hud.gd                # Reacts to GameManager signals
+└── project.godot
 ```
 
 ---
 
-### 2.5 商业化建议
+## Architecture Notes
 
-**定价策略调整建议**：
-- 原方案"免费+内购皮肤"会给解谜游戏受众留下负面印象
-- 建议改为：**itch.io 免费 Demo（前3关）+ Steam 定价 $7.99**（而非$9.99，$8以下冲动购买率更高）
-- 发售第一周 -20% 折扣（$6.39），配合 Godot 社区宣发
-
-**免费获客路径**（按优先级）：
-1. Godot 官方 Discord + Reddit r/godot 展示 GIF（成本低，精准受众）
-2. itch.io 发布免费 Demo + 参加 Godot Wild Jam
-3. Bilibili 开发日志（中文受众，竞争少）
-4. X/Twitter（效果最慢，最后做）
-
-**里程碑与发布节点**：
+**Signal flow** — `GameManager` is the sole emitter of core game signals:
 
 ```
-2026-04-15  MVP 原型 → 内部测试 5 人
-2026-05-01  Demo 发布 → itch.io 收集反馈
-2026-05-15  内容完整版本 → Steam 页面上线（开始 Wishlist）
-2026-06-15  正式发售
+beam_updated  →  StarBeam._recalculate()
+              →  GridOverlay (beam highlight)
+
+mirror_placed / mirror_removed / mirror_rotated
+              →  MirrorSpawner (3D node lifecycle)
+              →  beam_updated emitted after each
+
+puzzle_solved →  LevelCompleteUI.show()
+              →  SaveSystem.save()
+
+level_loaded  →  main.gd builds geometry
+              →  MirrorSpawner clears mirrors
 ```
 
----
+**Mode switching** — Tab triggers a 0.15 s fade Tween; Player + first-person camera shown in Explore, hidden in Design (overhead orthographic camera active).
 
-### 2.6 叙事执行建议
+**Beam reflection** — iterative `RayCast3D` with `EPSILON = 0.015` offset after each bounce, `MAX_BOUNCES = 10`. `force_raycast_update()` called per segment to avoid one-frame lag.
 
-**日志系统**不要做成强制阅读：
-- 放在 3D 场景的角落发光点里（可收集，不影响通关）
-- 每段日志 < 30 秒语音
-- 中英双语字幕同时显示（扩大受众，降低本地化成本）
-
-**情感节拍建议**（具体到关卡）：
-- 关 1 结束：Elara 第一条日志（15秒，建立角色）
-- 关 4 结束：第一个重要记忆碎片（揭示任务真相）
-- 关 8 结束：中场转折（建议加一个短过场动画，哪怕只是静态画面+配音）
-- 关 12 结束：多结局触发
-
-**三种结局触发条件**（可量化，避免模糊）：
-- 极简结局：全程使用镜面总数 ≤ 各关最低要求
-- 艺术结局：在沙盒模式中建造并保存 1 个自定义关卡
-- 效率结局：所有关卡通关时间总和 ≤ 90 分钟
+**Export safety** — log paths are a compile-time constant array (`LOG_PATHS` in `main.gd`); no `DirAccess.open("res://...")` calls that would silently fail in exported builds.
 
 ---
 
-## 三、发展空间分析
+## Levels (Chapter 1 — Lunar Station)
 
-### 短期（发布后 3 个月）
-- 社区关卡编辑器 + itch.io JSON 分享（核心留存功能）
-- 成就系统完整实装
-- 根据玩家反馈调整第 2、3 章难度
+| # | Layout | Mirrors needed | Notes |
+|---|--------|---------------|-------|
+| 1 | Open room | 1 | Tutorial — single bounce |
+| 2 | Central pillar | 2 | Two-bounce solution required |
+| 3 | Two parallel pillars | 2–3 | Beam must snake between them |
+| 4 | Cross obstacle | 3–4 | Emitter and target on same wall |
 
-### 中期（发布后 6-12 个月）
-- DLC：土星冰环篇（新镜面类型：棱镜分光）
-- 排行榜（速通模式）
-- Steam Workshop 集成
-
-### 长期（1 年后）
-- VR 模式（Quest 2 支持，镜面解谜天然适合 VR 视角）
-- 社区关卡大赛（奖品：Steam 礼品卡，低成本高热度）
-- 移动端（控制方案：点按放置镜子 + 陀螺仪微调）
+Memory fragment log entries (Elara's journal) unlock in levels 3 and 4.
 
 ---
 
-## 四、最大风险与对策
+## Save System
 
-| 风险 | 概率 | 对策 |
-|------|------|------|
-| 2D↔3D 切换体验差，玩家迷失 | 高 | 第 1 周原型就测试这个，不通过不推进 |
-| 镜面 Shader 性能在低端机崩溃 | 中 | MVP 阶段用简单平面反射，复杂 Shader 最后加 |
-| 单人开发工期滑坡 | 高 | 严格执行 MVP 清单，每周五审视范围 |
-| 解谜太难导致差评 | 中 | Demo 阶段收集 5 名非游戏玩家的测试反馈 |
-| 叙事和玩法脱节 | 低 | 日志全部设为可选，不影响通关 |
+Save file location: `user://save.json`
 
----
+```json
+{
+    "level_index": 2,
+    "collected_log_ids": ["elara_day01", "elara_day07"]
+}
+```
 
-## 五、技术栈
-
-- **引擎**：Godot 4.3+
-- **语言**：GDScript
-- **镜面**：SubViewport + 自定义 Shader
-- **物理**：CharacterBody3D + RayCast3D + Area3D
-- **存档**：JSON（Resource 序列化）
-- **导出目标**：Windows / macOS / HTML5（Web）
+Delete save: **主菜单 → 新游戏** overwrites the file, or delete `save.json` from the Godot user data directory manually.
 
 ---
 
-## 六、资源参考
+## Status
 
-**免费美术资源**：
-- Godot Asset Library: `Sci-Fi Modular Pack`, `Low Poly Space Kit`
-- KenneyNL 太空资源包（CC0 授权）
-
-**音频参考风格**：
-- 《No Man's Sky》ambient 轨道
-- 《Outer Wilds》弦乐 + 空灵合唱
-
-**技术参考**：
-- Godot 官方 3D Mirror Demo（SubViewport 实现）
-- GDQuest 第一人称控制器教程
+- [x] Phase 1 — Core loop (design/explore modes, beam, 4 levels)
+- [x] Phase 2 — Story system (LogEntry, MemoryFragment, log viewer)
+- [x] Phase 3 — Polish (main menu, pause menu, save/load, level complete UI)
+- [ ] Audio (SFX + ambient tracks)
+- [ ] Export templates configured for Windows / macOS / Web
 
 ---
 
-*策划版本：v2.0 | 迭代日期：2026-03 | 预计发布：2026-06*
+*Engine: Godot 4.3+ · Language: GDScript · License: see LICENSE*

@@ -95,6 +95,6 @@ text = ""
 
 [node name="LevelComplete" parent="." instance=ExtResource("8")]
 
-[node name="LogViewer" parent="." instance=ExtResource("9")]
-
 [node name="PauseMenu" parent="." instance=ExtResource("10")]
+
+[node name="LogViewer" parent="." instance=ExtResource("9")]
