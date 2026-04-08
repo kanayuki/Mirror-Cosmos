@@ -40,11 +40,13 @@ func _spawn_memory_fragments(data: LevelData) -> void:
 	var pos_count  := data.memory_fragment_positions.size()
 	var path_count := data.memory_fragment_log_paths.size()
 	for i: int in mini(pos_count, path_count):
-		var frag := MEMORY_FRAGMENT_SCENE.instantiate() as MemoryFragment
-		frag.global_position = data.memory_fragment_positions[i]
+		var frag  := MEMORY_FRAGMENT_SCENE.instantiate() as MemoryFragment
 		var entry := ResourceLoader.load(data.memory_fragment_log_paths[i]) as LogEntry
 		frag.log_entry = entry
 		container.add_child(frag)
+		# Set global_position AFTER add_child so Godot can compute the correct
+		# world transform regardless of the container's own transform.
+		frag.global_position = data.memory_fragment_positions[i]
 
 # ── Level geometry ─────────────────────────────────────────────────────────
 # Level 1: open room, beam crosses corner

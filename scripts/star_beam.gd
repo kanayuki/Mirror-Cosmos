@@ -12,7 +12,6 @@ const COLOR_SOLVED     := Color(1.0, 0.9, 0.2)
 @onready var _ray: RayCast3D           = $RayCast3D
 
 var _mat: StandardMaterial3D
-var _solved: bool = false
 
 func _ready() -> void:
 	_mat = StandardMaterial3D.new()
@@ -31,7 +30,6 @@ func _recalculate() -> void:
 	var ld := GameManager.current_level_data
 	if ld == null:
 		return
-	_solved = false
 	_mat.albedo_color = COLOR_BEAM
 	_mat.emission     = COLOR_BEAM
 

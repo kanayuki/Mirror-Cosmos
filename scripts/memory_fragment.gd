@@ -30,7 +30,11 @@ func _process(delta: float) -> void:
 	_light.light_energy = BASE_ENERGY + sin(_pulse_t) * PULSE_ENERGY
 
 func _on_body_entered(body: Node3D) -> void:
-	if _collected or body != GameManager.player_node:
+	# Guard mode: in DESIGN the player physics body is still present at its
+	# last 3D position even though the mesh is hidden — don't collect then.
+	if _collected \
+			or GameManager.current_mode != GameManager.Mode.EXPLORE \
+			or body != GameManager.player_node:
 		return
 	_collected = true
 	if log_entry != null:

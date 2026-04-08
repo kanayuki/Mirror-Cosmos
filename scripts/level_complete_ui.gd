@@ -31,12 +31,12 @@ func _on_puzzle_solved() -> void:
 	tw.tween_property(_panel, "modulate:a", 1.0, 0.35)
 
 func _on_next_pressed() -> void:
-	_hide_panel()
+	# Do NOT call _hide_panel() here: advance_level() emits level_loaded,
+	# which is already connected to _hide_panel() — calling it twice creates
+	# two simultaneous tweens competing on _panel.modulate.a.
 	GameManager.advance_level()
 
 func _on_retry_pressed() -> void:
-	_hide_panel()
-	# Reload current level (clears mirrors, returns to design)
 	GameManager.load_level_by_index(GameManager.current_level_index)
 
 func _hide_panel() -> void:
