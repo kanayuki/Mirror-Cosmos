@@ -1,12 +1,16 @@
 ## Level complete overlay — shown after puzzle_solved signal.
-## Fades in, displays stats, offers Next Level or Return to Design.
+## Stars pop in one by one with a scale-bounce animation.
 extends CanvasLayer
 
-@onready var _panel:       Control = $Panel
-@onready var _title:       Label   = $Panel/VBox/Title
-@onready var _stats:       Label   = $Panel/VBox/Stats
-@onready var _btn_next:    Button  = $Panel/VBox/BtnNext
-@onready var _btn_retry:   Button  = $Panel/VBox/BtnRetry
+@onready var _panel:     Control = $Panel
+@onready var _stats:     Label   = $Panel/VBox/Stats
+@onready var _btn_next:  Button  = $Panel/VBox/BtnNext
+@onready var _btn_retry: Button  = $Panel/VBox/BtnRetry
+@onready var _stars: Array[Label] = [
+	$Panel/VBox/StarRow/Star1,
+	$Panel/VBox/StarRow/Star2,
+	$Panel/VBox/StarRow/Star3,
+]
 
 func _ready() -> void:
 	_panel.modulate.a = 0.0
@@ -17,23 +21,43 @@ func _ready() -> void:
 	_btn_retry.pressed.connect(_on_retry_pressed)
 
 func _on_puzzle_solved() -> void:
-	var ld := GameManager.current_level_data
+	var ld     := GameManager.current_level_data
 	var placed := GameManager.placed_mirrors.size()
 	var par    := ld.par_mirrors if ld else placed
-	var stars  := _calc_stars(placed, par)
+	var count  := _calc_stars(placed, par)
 
-	_title.text = "★".repeat(stars) + "☆".repeat(3 - stars) + "  Solved!"
-	_stats.text = "Mirrors used: %d  /  Par: %d" % [placed, par]
+	_stats.text = "用了 %d 面镜子  /  最优解 %d" % [placed, par]
 	_btn_next.visible = GameManager.has_next_level()
+
+	# Set initial state: earned stars ready to pop, unearned stars pre-greyed
+	for i in _stars.size():
+		if i < count:
+			_stars[i].scale    = Vector2(1.8, 1.8)
+			_stars[i].modulate = Color(1.0, 0.85, 0.2, 0.0)
+		else:
+			_stars[i].scale    = Vector2.ONE
+			_stars[i].modulate = Color(0.30, 0.30, 0.30, 0.45)
 
 	visible = true
 	var tw := create_tween()
-	tw.tween_property(_panel, "modulate:a", 1.0, 0.35)
+	tw.tween_property(_panel, "modulate:a", 1.0, 0.30)
+	tw.tween_callback(func(): _animate_stars(count))
+
+func _animate_stars(count: int) -> void:
+	for i in count:
+		var s := _stars[i]
+		var tw := create_tween()
+		tw.tween_interval(0.20 * i)
+		tw.tween_callback(func():
+			var ptw := create_tween().set_parallel()
+			ptw.tween_property(s, "modulate:a", 1.0, 0.18)
+			ptw.tween_property(s, "scale", Vector2.ONE, 0.28) \
+				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		)
 
 func _on_next_pressed() -> void:
 	# Do NOT call _hide_panel() here: advance_level() emits level_loaded,
-	# which is already connected to _hide_panel() — calling it twice creates
-	# two simultaneous tweens competing on _panel.modulate.a.
+	# which is already connected to _hide_panel() — two tweens would compete.
 	GameManager.advance_level()
 
 func _on_retry_pressed() -> void:

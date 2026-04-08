@@ -13,6 +13,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+UITheme="*res://autoload/ui_theme.gd"
 GameManager="*res://autoload/game_manager.gd"
 LogManager="*res://autoload/log_manager.gd"
 SaveSystem="*res://autoload/save_system.gd"
