@@ -25,9 +25,12 @@ func _on_mode_changed(_mode) -> void:
 	tw.tween_property(_mode_label, "modulate:a", 1.0, 0.20)
 
 func _on_puzzle_solved() -> void:
-	_hint_label.text    = "★  已解谜！"
+	_hint_label.text     = "★  已解谜！"
 	_hint_label.modulate = Color(1.0, 0.9, 0.2)
 	await get_tree().create_timer(2.2).timeout
+	# Guard: scene may have changed (quit to menu) during the wait
+	if not is_inside_tree():
+		return
 	_refresh()
 
 func _refresh() -> void:

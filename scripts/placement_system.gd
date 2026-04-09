@@ -16,6 +16,8 @@ var _ghost_t: float = 0.0
 
 func _ready() -> void:
 	GameManager.level_loaded.connect(_on_level_loaded)
+	# Hide ghost immediately when switching to explore — don't wait for a mouse event
+	GameManager.mode_changed.connect(func(_m): _hide_ghost())
 
 func _on_level_loaded(_data: LevelData) -> void:
 	if _ghost == null:

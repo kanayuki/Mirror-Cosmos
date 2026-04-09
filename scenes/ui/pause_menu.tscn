@@ -19,19 +19,20 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -140.0
-offset_top = -130.0
-offset_right = 140.0
-offset_bottom = 130.0
+offset_left = -160.0
+offset_top = -200.0
+offset_right = 160.0
+offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="Panel"]
-theme_override_constants/separation = 14
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Panel/VBox"]
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 22
+modulate = Color(0.5, 0.9, 1.0, 1)
 text = "暂停"
 
 [node name="BtnResume" type="Button" parent="Panel/VBox"]
@@ -45,3 +46,67 @@ text = "重新开始本关"
 [node name="BtnMenu" type="Button" parent="Panel/VBox"]
 theme_override_font_sizes/font_size = 16
 text = "返回主菜单"
+
+[node name="Sep" type="HSeparator" parent="Panel/VBox"]
+modulate = Color(0.3, 0.5, 0.8, 0.5)
+
+[node name="MasterRow" type="HBoxContainer" parent="Panel/VBox"]
+theme_override_constants/separation = 10
+
+[node name="MasterLabel" type="Label" parent="Panel/VBox/MasterRow"]
+custom_minimum_size = Vector2(64, 0)
+theme_override_font_sizes/font_size = 14
+text = "总音量"
+vertical_alignment = 1
+
+[node name="MasterSlider" type="HSlider" parent="Panel/VBox/MasterRow"]
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="SfxRow" type="HBoxContainer" parent="Panel/VBox"]
+theme_override_constants/separation = 10
+
+[node name="SfxLabel" type="Label" parent="Panel/VBox/SfxRow"]
+custom_minimum_size = Vector2(64, 0)
+theme_override_font_sizes/font_size = 14
+text = "音效"
+vertical_alignment = 1
+
+[node name="SfxSlider" type="HSlider" parent="Panel/VBox/SfxRow"]
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="AmbRow" type="HBoxContainer" parent="Panel/VBox"]
+theme_override_constants/separation = 10
+
+[node name="AmbLabel" type="Label" parent="Panel/VBox/AmbRow"]
+custom_minimum_size = Vector2(64, 0)
+theme_override_font_sizes/font_size = 14
+text = "环境音"
+vertical_alignment = 1
+
+[node name="AmbSlider" type="HSlider" parent="Panel/VBox/AmbRow"]
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 0.6
+
+[node name="FsRow" type="HBoxContainer" parent="Panel/VBox"]
+theme_override_constants/separation = 10
+
+[node name="FsLabel" type="Label" parent="Panel/VBox/FsRow"]
+custom_minimum_size = Vector2(64, 0)
+theme_override_font_sizes/font_size = 14
+text = "全屏"
+vertical_alignment = 1
+
+[node name="FsCheck" type="CheckButton" parent="Panel/VBox/FsRow"]
+theme_override_font_sizes/font_size = 14
+text = ""
