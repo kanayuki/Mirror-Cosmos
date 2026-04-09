@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/world/player.tscn"       id="1"]
 [ext_resource type="Script"      path="res://scripts/main.gd"                 id="2"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/level_complete.tscn"   id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/log_viewer.tscn"       id="9"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn"       id="10"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_intro.tscn"      id="11"]
 
 [node name="Main" type="Node"]
 script = ExtResource("2")
@@ -113,6 +114,8 @@ theme_override_font_sizes/font_size = 22
 modulate = Color(1, 1, 1, 0.60)
 text = "+"
 visible = false
+
+[node name="LevelIntro" parent="." instance=ExtResource("11")]
 
 [node name="LevelComplete" parent="." instance=ExtResource("8")]
 

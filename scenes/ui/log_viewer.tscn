@@ -26,6 +26,11 @@ size_flags_horizontal = 3
 text = "日志  0 条"
 modulate = Color(0.5, 0.9, 1.0, 1)
 
+[node name="PlayBtn" type="Button" parent="Panel/VBox/Header"]
+theme_override_font_sizes/font_size = 14
+text = "▶  播放"
+visible = false
+
 [node name="CloseBtn" type="Button" parent="Panel/VBox/Header"]
 text = "✕  关闭  [Esc]"
 theme_override_font_sizes/font_size = 14

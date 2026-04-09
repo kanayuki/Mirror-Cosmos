@@ -39,6 +39,7 @@ func _on_puzzle_solved() -> void:
 			_stars[i].modulate = Color(0.30, 0.30, 0.30, 0.45)
 
 	visible = true
+	AudioManager.play_sfx("level_complete")
 	var tw := create_tween()
 	tw.tween_property(_panel, "modulate:a", 1.0, 0.30)
 	tw.tween_callback(func(): _animate_stars(count))

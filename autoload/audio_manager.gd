@@ -72,8 +72,9 @@ func _connect_signals() -> void:
 	GameManager.mirror_rotated.connect(func(_d): play_sfx("mirror_rotate"))
 	GameManager.puzzle_solved.connect(func():    play_sfx("beam_solved"))
 	GameManager.mode_changed.connect(func(_m):   play_sfx("mode_switch"))
-	GameManager.level_loaded.connect(func(_d):   play_sfx("level_complete"))
 	LogManager.log_collected.connect(func(_e):   play_sfx("fragment_collect"))
+	# "level_complete" is triggered by LevelCompleteUI when the panel shows,
+	# NOT here — connecting to level_loaded would play it on every load including game start.
 
 # ── Public API ─────────────────────────────────────────────────────────────
 func play_sfx(key: String) -> void:
