@@ -5,6 +5,7 @@ extends Node3D
 const MAX_BOUNCES      := 10
 const RAY_LENGTH       := 60.0
 const EPSILON          := 0.015   # Offset to avoid self-intersection after bounce
+const BASE_ENERGY      := 2.5
 const COLOR_BEAM       := Color(0.3, 0.9, 1.0)
 const COLOR_SOLVED     := Color(1.0, 0.9, 0.2)
 
@@ -12,6 +13,7 @@ const COLOR_SOLVED     := Color(1.0, 0.9, 0.2)
 @onready var _ray: RayCast3D           = $RayCast3D
 
 var _mat: StandardMaterial3D
+var _solved_tween: Tween = null
 
 func _ready() -> void:
 	_mat = StandardMaterial3D.new()
@@ -19,7 +21,7 @@ func _ready() -> void:
 	_mat.albedo_color = COLOR_BEAM
 	_mat.emission_enabled = true
 	_mat.emission = COLOR_BEAM
-	_mat.emission_energy_multiplier = 2.5
+	_mat.emission_energy_multiplier = BASE_ENERGY
 
 	# beam_updated is always emitted after level_loaded in load_level(),
 	# so one connection is sufficient — no double recalculate on level load.
@@ -27,11 +29,17 @@ func _ready() -> void:
 
 # ── Core ───────────────────────────────────────────────────────────────────
 func _recalculate() -> void:
+	# Cancel any solved pulse so it doesn't fight the reset
+	if _solved_tween != null:
+		_solved_tween.kill()
+		_solved_tween = null
+
 	var ld := GameManager.current_level_data
 	if ld == null:
 		return
 	_mat.albedo_color = COLOR_BEAM
 	_mat.emission     = COLOR_BEAM
+	_mat.emission_energy_multiplier = BASE_ENERGY
 
 	var points := _cast_chain(ld.beam_origin, ld.beam_direction.normalized())
 	_draw(points)
@@ -84,4 +92,13 @@ func _on_target_hit() -> void:
 	GameManager.is_solved = true
 	_mat.albedo_color = COLOR_SOLVED
 	_mat.emission     = COLOR_SOLVED
+	_pulse_solved()
 	GameManager.puzzle_solved.emit()
+
+func _pulse_solved() -> void:
+	# Beam energy pulses 5 times then settles — killed on next level load.
+	_solved_tween = create_tween().set_loops(5)
+	_solved_tween.tween_property(_mat, "emission_energy_multiplier", 5.0, 0.22) \
+		.set_trans(Tween.TRANS_SINE)
+	_solved_tween.tween_property(_mat, "emission_energy_multiplier", BASE_ENERGY, 0.22) \
+		.set_trans(Tween.TRANS_SINE)

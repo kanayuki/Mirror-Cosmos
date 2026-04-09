@@ -6,6 +6,7 @@ extends CanvasLayer
 @onready var _mirror_label: Label = $Panel/VBox/MirrorLabel
 @onready var _hint_label:   Label = $Panel/VBox/HintLabel
 @onready var _log_label:    Label = $Panel/VBox/LogLabel
+@onready var _crosshair:    Label = $Crosshair
 
 func _ready() -> void:
 	GameManager.mode_changed.connect(_on_mode_changed)
@@ -42,10 +43,12 @@ func _refresh() -> void:
 		GameManager.Mode.DESIGN:
 			_mode_label.text     = "◈  设计模式"
 			_mirror_label.text   = "镜面  %d / %d" % [placed, max_m]
-			_hint_label.text     = "左键放置  ·  右键删除  ·  再次点击旋转  ·  Tab 进入探索"
+			_hint_label.text     = "左键放置  ·  右键删除  ·  再次点击旋转  ·  Ctrl+Z 撤销  ·  Tab 进入探索"
 			_hint_label.modulate = Color(0.60, 0.60, 0.60, 1)
+			_crosshair.visible   = false
 		GameManager.Mode.EXPLORE:
 			_mode_label.text     = "◉  探索模式"
 			_mirror_label.text   = ""
 			_hint_label.text     = "WASD 移动  ·  空格跳跃  ·  Tab 返回设计  ·  L 查看日志"
 			_hint_label.modulate = Color(0.60, 0.60, 0.60, 1)
+			_crosshair.visible   = true

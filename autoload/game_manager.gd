@@ -111,6 +111,15 @@ func try_rotate_mirror(world_pos: Vector3) -> bool:
 	beam_updated.emit()
 	return true
 
+func undo_last_mirror() -> bool:
+	if is_solved or placed_mirrors.is_empty():
+		return false
+	var last := placed_mirrors[-1]
+	placed_mirrors.erase(last)
+	mirror_removed.emit(last.world_position)
+	beam_updated.emit()
+	return true
+
 # ── Mode switching ─────────────────────────────────────────────────────────
 func switch_mode() -> void:
 	if is_transitioning:
