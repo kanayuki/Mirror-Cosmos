@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="LogEntry" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/log_entry.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+log_id = "elara_day07"
+title = "第七天 — 反射"
+date_stamp = "Day 7  ·  2049.03.18  ·  银影基地"
+body = "反射图案比我想象的更复杂。光线每经过一次弹射，就好像在问一个新问题。
+
+有时我觉得，镜子不只是在重定向光线——它们在重定向思维。
+当我凝视镜阵中自己的映像，看到的不是一个执行任务的宇航员，而是一个在寻找某种留在身后之物的人。
+
+地球的蓝色在舷窗外悬着。
+我注意到：我已经两天没有看它了。"
+audio_path = ""

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="LogEntry" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/log_entry.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+log_id = "elara_day01"
+title = "第一天 — 着陆"
+date_stamp = "Day 1  ·  2049.03.12  ·  银影基地"
+body = "着陆成功。阿尔忒弥斯扩展计划将我独自送到这里。基地寒冷而沉寂——比简报里描述的寒冷得多。
+
+今天我搭起了第一套镜面阵列。粗糙，但它奏效了。星光恰如方程式预言的那样弯折，打在目标上的瞬间，整个房间都亮了一下。
+
+奇怪的是，这束光在1.3秒前还触碰着地球。
+我想知道，那时有没有人在仰望月亮。"
+audio_path = ""
